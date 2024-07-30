@@ -94,13 +94,31 @@ pub async fn get_blances_wit_top(
             token_holders.insert(*holder, user_reserve1.to_string());
         }
     } else {
-        for (holder, balance) in holders.iter().zip(new_balances.iter()).take(top) {
+        // set token holders with their balances
+        for (holder, balance) in holders.iter().zip(new_balances.iter()) {
             if balance.as_u128() == 0 {
                 continue;
             }
 
             token_holders.insert(*holder, balance.to_string());
         }
+
+        // sort token holders by their balances
+        let mut sorted_holders: Vec<(H160, U256)> = token_holders
+            .iter()
+            .map(|(k, v)| (*k, U256::from_dec_str(v).unwrap()))
+            .collect();
+
+        sorted_holders.sort_by(|a, b| b.1.cmp(&a.1));
+
+        // get top x holders
+        let top_holders: Vec<(H160, U256)> = sorted_holders.iter().take(top).cloned().collect();
+
+        // set token holders with their balances
+        token_holders = top_holders
+            .iter()
+            .map(|(k, v)| (*k, v.to_string()))
+            .collect();
     }
     Ok(token_holders)
 }
